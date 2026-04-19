@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reports</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+
+<h2 class="text-xl font-bold mb-4">Reports</h2>
+
+<div class="bg-white p-4 rounded shadow">
+
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 mb-4 items-end">
+    <div>
+      <label class="block text-sm font-medium mb-1">Invoice No</label>
+      <input type="number" id="invoiceNo" placeholder="Bill ID" class="border p-2 w-full rounded">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Date</label>
+      <input type="date" id="date" class="border p-2 w-full rounded">
+    </div>
+    <button onclick="loadReport()" class="bg-blue-500 text-white px-4 py-2 rounded h-[42px]">Load</button>
+  </div>
+
+  <h3 id="result" class="text-lg font-bold mb-4"></h3>
+  <div id="reportDetails"></div>
+
+</div>
+
+<script src="../js/reports.js"></script>
+</body>
+</html>
