@@ -1,4 +1,8 @@
-const API = "http://localhost:5000";
+const API = (typeof window !== "undefined" && window.API_BASE_URL) || (
+  location.hostname === "localhost" || location.hostname === "127.0.0.1"
+    ? "http://localhost:5000"
+    : "https://billing-app-hnbf.onrender.com"
+);
 const invoiceNo = `INV-${String(Date.now()).slice(-6)}`;
 
 let products = [];
