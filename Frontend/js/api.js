@@ -4,9 +4,12 @@ const API = (typeof window !== "undefined" && window.API_BASE_URL) || (
     : "https://billing-app-hnbf.onrender.com"
 );
 
-export const getProducts = () => fetch(`${API}/products`).then(res => res.json());
-export const createBill = (data) => fetch(`${API}/bills`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(data)
-});
+export const getProducts = () =>
+  fetch(`${API}/api/products`).then(res => res.json());
+
+export const createBill = (data) =>
+  fetch(`${API}/api/bills`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
