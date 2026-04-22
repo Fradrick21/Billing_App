@@ -8,7 +8,7 @@ let editId = null;
 
 async function loadProducts() {
   const res = await fetch(`${API}/products`);
-  const data = await res.json();
+  const data = await res.json().catch(() => []);
 
   const table = document.getElementById("productTable");
   table.innerHTML = "";
@@ -33,22 +33,31 @@ async function addProduct() {
   const price = document.getElementById("price").value;
   const tax = document.getElementById("tax").value;
 
-  if (editId) {
-    await fetch(`${API}/products/${editId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, price, tax_percentage: tax })
-    });
-    editId = null;
-  } else {
-    await fetch(`${API}/products`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, price, tax_percentage: tax })
-    });
-  }
+  try {
+    const res = await fetch(
+      editId ? `${API}/products/${editId}` : `${API}/products`,
+      {
+        method: editId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, price, tax_percentage: tax })
+      }
+    );
 
-  loadProducts();
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      alert(data.message || "Unable to save product");
+      return;
+    }
+
+    editId = null;
+    document.getElementById("name").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("tax").value = "";
+    loadProducts();
+  } catch (error) {
+    alert("Unable to reach the server. Please try again.");
+  }
 }
 
 function editProduct(id, name, price, tax) {
@@ -59,8 +68,17 @@ function editProduct(id, name, price, tax) {
 }
 
 async function deleteProduct(id) {
-  await fetch(`${API}/products/${id}`, { method: "DELETE" });
-  loadProducts();
+  try {
+    const res = await fetch(`${API}/products/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.message || "Unable to delete product");
+      return;
+    }
+    loadProducts();
+  } catch (error) {
+    alert("Unable to reach the server. Please try again.");
+  }
 }
 
 loadProducts();
