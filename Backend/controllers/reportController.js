@@ -1,4 +1,4 @@
-const pool = require("../server/db");
+const pool = require("../db");
 
 exports.getDetails = async (req, res) => {
   const { date, invoiceNo } = req.query;

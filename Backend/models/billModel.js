@@ -1,4 +1,4 @@
-const pool = require("../server/db");
+const pool = require("../db");
 
 exports.createBill = async (total, tax, grand) => {
   const res = await pool.query(

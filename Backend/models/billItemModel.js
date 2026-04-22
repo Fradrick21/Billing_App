@@ -1,4 +1,4 @@
-const pool = require("../server/db");
+const pool = require("../db");
 
 exports.createItem = async (billId, item) => {
   await pool.query(

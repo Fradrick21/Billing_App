@@ -1,6 +1,5 @@
 const userModel = require('../models/userModel');
 
-// Register
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -8,7 +7,6 @@ exports.register = async (req, res) => {
   res.json(user);
 };
 
-// Login
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 

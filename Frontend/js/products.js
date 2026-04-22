@@ -2,7 +2,6 @@ const API = "http://localhost:5000";
 
 let editId = null;
 
-// Load products from backend
 async function loadProducts() {
   const res = await fetch(`${API}/products`);
   const data = await res.json();
@@ -25,7 +24,6 @@ async function loadProducts() {
   });
 }
 
-// Add / Update product
 async function addProduct() {
   const name = document.getElementById("name").value.toUpperCase();
   const price = document.getElementById("price").value;
@@ -49,7 +47,6 @@ async function addProduct() {
   loadProducts();
 }
 
-// Edit
 function editProduct(id, name, price, tax) {
   document.getElementById("name").value = String(name || "").toUpperCase();
   document.getElementById("price").value = price;
@@ -57,7 +54,6 @@ function editProduct(id, name, price, tax) {
   editId = id;
 }
 
-// Delete
 async function deleteProduct(id) {
   await fetch(`${API}/products/${id}`, { method: "DELETE" });
   loadProducts();

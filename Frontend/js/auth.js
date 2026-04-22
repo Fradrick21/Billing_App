@@ -1,6 +1,5 @@
 const API = "http://localhost:5000";
 
-// Register
 async function register() {
   const name = document.getElementById("name").value;
   const email = document.getElementById("email").value;
@@ -16,7 +15,6 @@ async function register() {
   window.location.href = "login.html";
 }
 
-// Login
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
