@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const pool = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +16,20 @@ app.use("/auth", require("./routes/authRoutes"));
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });
+});
+
+app.get("/db-health", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW() AS server_time");
+    res.json({ ok: true, serverTime: result.rows[0].server_time });
+  } catch (error) {
+    console.error("Database health check failed:", error);
+    res.status(500).json({
+      ok: false,
+      code: error.code,
+      message: error.message,
+    });
+  }
 });
 
 app.use((err, req, res, next) => {
