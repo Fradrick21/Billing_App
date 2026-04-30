@@ -1,31 +1,62 @@
-const API = (typeof window !== "undefined" && window.API_BASE_URL) || (
-  location.hostname === "localhost" || location.hostname === "127.0.0.1"
-    ? "http://localhost:5000"
-    : "https://billing-app-hnbf.onrender.com"
-);
+const API = window.API_BASE_URL || "http://localhost:5000";
 
 let editId = null;
 
 async function loadProducts() {
-  const res = await fetch(`${API}/products`);
-  const data = await res.json().catch(() => []);
-
   const table = document.getElementById("productTable");
-  table.innerHTML = "";
 
-  data.forEach(p => {
-    table.innerHTML += `
+  try {
+    const res = await fetch(`${API}/products`);
+    const data = await res.json().catch(() => []);
+
+    table.innerHTML = "";
+
+    if (!res.ok) {
+      throw new Error(data.message || "Unable to load products");
+    }
+
+    if (!Array.isArray(data)) {
+      throw new Error("Invalid products response");
+    }
+
+    if (!data.length) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="4" class="px-4 py-6 text-center text-gray-500">No products found.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    data.forEach((p) => {
+      const row = document.createElement("tr");
+      row.className = "border-t";
+
+      row.innerHTML = `
+        <td class="px-3 py-2">${String(p.name || "").toUpperCase()}</td>
+        <td class="px-3 py-2">${p.price}</td>
+        <td class="px-3 py-2">${p.tax_percentage}</td>
+        <td class="px-3 py-2">
+          <button type="button" class="bg-yellow-500 text-white px-3 py-1 rounded mr-2">Edit</button>
+          <button type="button" class="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+        </td>
+      `;
+
+      const [editButton, deleteButton] = row.querySelectorAll("button");
+      editButton.addEventListener("click", () => editProduct(p.id, p.name, p.price, p.tax_percentage));
+      deleteButton.addEventListener("click", () => deleteProduct(p.id));
+
+      table.appendChild(row);
+    });
+  } catch (error) {
+    table.innerHTML = `
       <tr>
-        <td>${String(p.name || "").toUpperCase()}</td>
-        <td>${p.price}</td>
-        <td>${p.tax_percentage}</td>
-        <td>
-          <button onclick="editProduct(${p.id}, '${p.name}', ${p.price}, ${p.tax_percentage})">✏️</button>
-          <button onclick="deleteProduct(${p.id})">🗑️</button>
+        <td colspan="4" class="px-4 py-6 text-center text-red-600">
+          ${error.message || "Unable to load products"}
         </td>
       </tr>
     `;
-  });
+  }
 }
 
 async function addProduct() {
@@ -39,7 +70,7 @@ async function addProduct() {
       {
         method: editId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, price, tax_percentage: tax })
+        body: JSON.stringify({ name, price, tax_percentage: tax }),
       }
     );
 

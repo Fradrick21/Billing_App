@@ -4,7 +4,7 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const user = await userModel.createUser(name, email, password);
+    const user = await userModel.createUser(name.trim(), email.trim().toLowerCase(), password);
     res.json(user);
   } catch (error) {
     console.error("register failed:", error);
@@ -16,7 +16,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await userModel.findUser(email);
+    const user = await userModel.findUser(email.trim());
 
     if (!user || user.password !== password) {
       return res.status(401).json({ message: 'Invalid credentials' });

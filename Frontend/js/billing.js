@@ -1,8 +1,4 @@
-const API = (typeof window !== "undefined" && window.API_BASE_URL) || (
-  location.hostname === "localhost" || location.hostname === "127.0.0.1"
-    ? "http://localhost:5000"
-    : "https://billing-app-hnbf.onrender.com"
-);
+const API = window.API_BASE_URL || "http://localhost:5000";
 const invoiceNo = `INV-${String(Date.now()).slice(-6)}`;
 
 let products = [];
@@ -25,25 +21,56 @@ function updateInvoiceMeta() {
 }
 
 async function loadProducts() {
-  const res = await fetch(`${API}/products`);
-  products = await res.json();
-
   const select = document.getElementById("product");
-  select.innerHTML = "";
 
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "Select product";
-  placeholder.disabled = true;
-  placeholder.selected = true;
-  select.appendChild(placeholder);
+  try {
+    const res = await fetch(`${API}/products`);
+    const data = await res.json().catch(() => []);
 
-  products.forEach((p) => {
-    const opt = document.createElement("option");
-    opt.value = p.id;
-    opt.textContent = String(p.name || "").toUpperCase();
-    select.appendChild(opt);
-  });
+    if (!res.ok) {
+      throw new Error(data.message || "Unable to load products");
+    }
+
+    if (!Array.isArray(data)) {
+      throw new Error("Invalid products response");
+    }
+
+    products = data;
+    select.innerHTML = "";
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select product";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    select.appendChild(placeholder);
+
+    if (!products.length) {
+      const empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = "No products found";
+      empty.disabled = true;
+      select.appendChild(empty);
+      return;
+    }
+
+    products.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = String(p.name || "").toUpperCase();
+      select.appendChild(opt);
+    });
+  } catch (error) {
+    products = [];
+    select.innerHTML = "";
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = error.message || "Unable to load products";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    select.appendChild(placeholder);
+  }
 }
 
 function addItem() {
@@ -128,30 +155,40 @@ function render() {
 }
 
 async function generateBill() {
-  let total = 0;
-  let tax = 0;
+  try {
+    let total = 0;
+    let tax = 0;
 
-  cart.forEach((item) => {
-    total += item.total;
-    tax += item.tax;
-  });
+    cart.forEach((item) => {
+      total += item.total;
+      tax += item.tax;
+    });
 
-  const grandTotal = total + tax;
+    const grandTotal = total + tax;
 
-  await fetch(`${API}/bills`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      items: cart,
-      total,
-      tax,
-      grandTotal,
-    }),
-  });
+    const res = await fetch(`${API}/bills`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: cart,
+        total,
+        tax,
+        grandTotal,
+      }),
+    });
 
-  alert(`Bill Saved! Invoice ${invoiceNo}`);
-  cart = [];
-  render();
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data.message || "Unable to save bill");
+    }
+
+    alert(`Bill Saved! Invoice ${invoiceNo}`);
+    cart = [];
+    render();
+  } catch (error) {
+    alert(error.message || "Unable to save bill");
+  }
 }
 
 updateInvoiceMeta();

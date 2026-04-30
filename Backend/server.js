@@ -12,4 +12,40 @@ app.use("/bills", require("./routes/billingRoutes"));
 app.use("/reports", require("./routes/reportRoutes"));
 app.use("/auth", require("./routes/authRoutes"));
 
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.get("/health", (req, res) => {
+  res.json({ ok: true });
+});
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled request error:", err);
+  res.status(500).json({ message: "Internal server error" });
+});
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection:", error);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+});
+
+const server = app.listen(PORT, (error) => {
+  if (error) {
+    handleStartupError(error);
+    return;
+  }
+
+  console.log(`Server running on ${PORT}`);
+});
+
+server.on("error", handleStartupError);
+
+function handleStartupError(error) {
+  if (error.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} is already in use. Stop the other Node process or set a different PORT.`);
+  } else {
+    console.error("Server failed to start:", error);
+  }
+
+  process.exit(1);
+}
