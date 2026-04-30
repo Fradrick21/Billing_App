@@ -6,7 +6,11 @@ exports.getProducts = async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error("getProducts failed:", error);
-    res.status(500).json({ message: "Unable to load products" });
+    res.status(500).json({
+      message: "Unable to load products",
+      code: error.code,
+      detail: error.message,
+    });
   }
 };
 
