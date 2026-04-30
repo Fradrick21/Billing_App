@@ -3,7 +3,7 @@ const { Pool } = require("pg");
 const config = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.PGSSLMODE === "require" ? { rejectUnauthorized: false } : undefined,
+      ssl: process.env.PGSSLMODE === "disable" ? false : { rejectUnauthorized: false },
     }
   : {
       user: process.env.PGUSER || "postgres",

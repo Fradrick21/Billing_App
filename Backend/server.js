@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HOST = "0.0.0.0";
 
 app.use(cors());
 app.use(express.json());
@@ -29,13 +30,13 @@ process.on("uncaughtException", (error) => {
   console.error("Uncaught exception:", error);
 });
 
-const server = app.listen(PORT, (error) => {
+const server = app.listen(PORT, HOST, (error) => {
   if (error) {
     handleStartupError(error);
     return;
   }
 
-  console.log(`Server running on ${PORT}`);
+  console.log(`Server running on ${HOST}:${PORT}`);
 });
 
 server.on("error", handleStartupError);
