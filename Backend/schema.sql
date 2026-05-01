@@ -1,10 +1,23 @@
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
+  user_type TEXT NOT NULL DEFAULT 'individual',
   name TEXT NOT NULL,
+  company_name TEXT,
+  address TEXT,
   email TEXT NOT NULL UNIQUE,
+  phone TEXT,
+  gst_no TEXT,
+  profile_image TEXT,
   password TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS user_type TEXT NOT NULL DEFAULT 'individual';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS gst_no TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image TEXT;
 
 CREATE TABLE IF NOT EXISTS products (
   id SERIAL PRIMARY KEY,

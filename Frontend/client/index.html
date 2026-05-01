@@ -7,11 +7,14 @@
 </head>
 <body class="min-h-screen bg-gray-100">
 
-<div class="max-w-5xl mx-auto p-6">
+<div class="w-full p-6">
   <div class="flex items-center justify-between mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Billing App</h1>
-      <p class="text-sm text-gray-600">Dashboard</p>
+    <div class="flex items-center gap-3">
+      <img id="profileImage" alt="Profile" class="h-12 w-12 rounded-full object-cover border bg-white">
+      <div>
+        <p id="currentUserName" class="text-base font-semibold text-gray-900"></p>
+        <button onclick="openProfileModal()" class="text-sm text-blue-600 hover:underline">Edit Account</button>
+      </div>
     </div>
     <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
   </div>
@@ -34,13 +37,161 @@
   </div>
 </div>
 
+<div id="profileModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 p-4">
+  <div class="bg-white rounded shadow w-full max-w-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-bold text-gray-900">Edit Account</h2>
+      <button onclick="closeProfileModal()" class="text-gray-500 text-2xl leading-none">&times;</button>
+    </div>
+
+    <div class="flex items-center gap-4 mb-4">
+      <img id="profilePreview" alt="Profile preview" class="h-16 w-16 rounded-full object-cover border bg-gray-100">
+      <input id="profileImageInput" type="file" accept="image/*" class="text-sm">
+    </div>
+
+    <label class="block text-sm font-semibold text-gray-700 mb-1" for="profileName">Name</label>
+    <input id="profileName" class="border p-2 w-full mb-3 rounded" placeholder="Name">
+
+    <div id="companyEditField">
+      <label class="block text-sm font-semibold text-gray-700 mb-1" for="profileCompanyName">Company Name</label>
+      <input id="profileCompanyName" class="border p-2 w-full mb-3 rounded" placeholder="Company Name">
+    </div>
+
+    <p id="profileMessage" class="text-sm text-red-600 mb-3"></p>
+
+    <div class="flex justify-end gap-2">
+      <button onclick="closeProfileModal()" class="border px-4 py-2 rounded">Cancel</button>
+      <button onclick="saveProfile()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
 <script>
+  const API = window.API_BASE_URL || "http://localhost:5000";
+  const defaultProfileImage =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='48' fill='%23e5e7eb'/%3E%3Ccircle cx='48' cy='35' r='16' fill='%239ca3af'/%3E%3Cpath d='M20 82c4-18 18-28 28-28s24 10 28 28' fill='%239ca3af'/%3E%3C/svg%3E";
+
   if (localStorage.getItem("token") !== "loggedin") {
     window.location.href = "login.html";
   }
 
+  let selectedProfileImage = localStorage.getItem("currentUserProfileImage") || "";
+
+  function renderProfileHeader() {
+    const currentUserName = localStorage.getItem("currentUserName") || "User";
+    const profileImage = localStorage.getItem("currentUserProfileImage") || defaultProfileImage;
+
+    document.getElementById("currentUserName").textContent = currentUserName;
+    document.getElementById("profileImage").src = profileImage;
+  }
+
+  function openProfileModal() {
+    const userType = localStorage.getItem("currentUserType") || "individual";
+    const profileImage = localStorage.getItem("currentUserProfileImage") || defaultProfileImage;
+
+    selectedProfileImage = localStorage.getItem("currentUserProfileImage") || "";
+    document.getElementById("profileName").value =
+      localStorage.getItem("currentUserAccountName") || localStorage.getItem("currentUserName") || "";
+    document.getElementById("profileCompanyName").value =
+      userType === "company" ? localStorage.getItem("currentUserCompanyName") || localStorage.getItem("currentUserName") || "" : "";
+    document.getElementById("companyEditField").classList.toggle("hidden", userType !== "company");
+    document.getElementById("profilePreview").src = profileImage;
+    document.getElementById("profileMessage").textContent = "";
+    document.getElementById("profileModal").classList.remove("hidden");
+    document.getElementById("profileModal").classList.add("flex");
+  }
+
+  function closeProfileModal() {
+    document.getElementById("profileModal").classList.add("hidden");
+    document.getElementById("profileModal").classList.remove("flex");
+    document.getElementById("profileImageInput").value = "";
+  }
+
+  document.getElementById("profileImageInput").addEventListener("change", function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) {
+      document.getElementById("profileMessage").textContent = "Please choose an image below 1 MB.";
+      this.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      selectedProfileImage = reader.result;
+      document.getElementById("profilePreview").src = selectedProfileImage;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  async function saveProfile() {
+    const userId = localStorage.getItem("currentUserId");
+    const userType = localStorage.getItem("currentUserType") || "individual";
+    const name = document.getElementById("profileName").value.trim();
+    const companyName = document.getElementById("profileCompanyName").value.trim();
+    const profileMessage = document.getElementById("profileMessage");
+
+    if (!userId) {
+      profileMessage.textContent = "Please log out and log in again before editing your account.";
+      return;
+    }
+
+    if (!name) {
+      profileMessage.textContent = "Name is required.";
+      return;
+    }
+
+    if (userType === "company" && !companyName) {
+      profileMessage.textContent = "Company name is required.";
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/auth/profile/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          companyName: userType === "company" ? companyName : null,
+          profileImage: selectedProfileImage,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        profileMessage.textContent = data.message || "Unable to update profile.";
+        return;
+      }
+
+      const displayName =
+        data.user.userType === "company" && data.user.companyName
+          ? data.user.companyName
+          : data.user.name;
+
+      localStorage.setItem("currentUserName", displayName || "");
+      localStorage.setItem("currentUserAccountName", data.user.name || "");
+      localStorage.setItem("currentUserCompanyName", data.user.companyName || "");
+      localStorage.setItem("currentUserProfileImage", data.user.profileImage || "");
+      renderProfileHeader();
+      closeProfileModal();
+    } catch (error) {
+      profileMessage.textContent = "Unable to reach the server. Please try again.";
+    }
+  }
+
+  renderProfileHeader();
+
   function logout() {
     localStorage.removeItem("token");
+    localStorage.removeItem("currentUserId");
+    localStorage.removeItem("currentUserName");
+    localStorage.removeItem("currentUserType");
+    localStorage.removeItem("currentUserAccountName");
+    localStorage.removeItem("currentUserCompanyName");
+    localStorage.removeItem("currentUserProfileImage");
     window.location.href = "login.html";
   }
 </script>

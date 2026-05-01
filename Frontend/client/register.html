@@ -5,13 +5,32 @@
   <title>Register</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex justify-center items-center h-screen bg-gray-100">
+<body class="flex justify-center items-center min-h-screen bg-gray-100 py-8">
 
-<div class="bg-white p-6 rounded shadow w-80">
+<div class="bg-white p-6 rounded shadow w-96">
   <h2 class="text-xl font-bold mb-4">Register</h2>
+
+  <div class="grid grid-cols-2 gap-2 mb-3">
+    <label class="border rounded p-2 text-center cursor-pointer">
+      <input type="radio" name="userType" value="individual" checked onchange="toggleRegisterFields()" class="mr-1">
+      Individual
+    </label>
+    <label class="border rounded p-2 text-center cursor-pointer">
+      <input type="radio" name="userType" value="company" onchange="toggleRegisterFields()" class="mr-1">
+      Company
+    </label>
+  </div>
 
   <input id="name" placeholder="Name" class="border p-2 w-full mb-3">
   <input id="email" placeholder="Email" class="border p-2 w-full mb-3">
+  <input id="phone" placeholder="Phone" class="border p-2 w-full mb-3">
+
+  <div id="companyFields" class="hidden">
+    <input id="companyName" placeholder="Company Name" class="border p-2 w-full mb-3">
+    <textarea id="address" placeholder="Address" class="border p-2 w-full mb-3" rows="3"></textarea>
+    <input id="gstNo" placeholder="GST No" class="border p-2 w-full mb-3">
+  </div>
+
   <input id="password" type="password" placeholder="Password" class="border p-2 w-full mb-3">
 
   <button onclick="register()" class="bg-green-500 text-white w-full p-2">Register</button>
@@ -23,6 +42,6 @@
 </div>
 
 <script src="../js/config.js"></script>
-<script src="../js/auth.js"></script>
+<script src="../js/auth.js?v=3"></script>
 </body>
 </html>
