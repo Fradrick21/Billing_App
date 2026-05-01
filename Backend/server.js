@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const pool = require("./db");
+const initDb = require("./initDb");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -49,16 +50,25 @@ process.on("uncaughtException", (error) => {
   console.error("Uncaught exception:", error);
 });
 
-const server = app.listen(PORT, HOST, (error) => {
-  if (error) {
-    handleStartupError(error);
-    return;
-  }
+let server;
 
-  console.log(`Server running on ${HOST}:${PORT}`);
-});
+initDb()
+  .then(() => {
+    server = app.listen(PORT, HOST, (error) => {
+      if (error) {
+        handleStartupError(error);
+        return;
+      }
 
-server.on("error", handleStartupError);
+      console.log(`Server running on ${HOST}:${PORT}`);
+    });
+
+    server.on("error", handleStartupError);
+  })
+  .catch((error) => {
+    console.error("Database initialization failed:", error);
+    process.exit(1);
+  });
 
 function handleStartupError(error) {
   if (error.code === "EADDRINUSE") {

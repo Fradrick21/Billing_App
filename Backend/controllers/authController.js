@@ -36,9 +36,14 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
 
-    const user = await userModel.findUser(email.trim());
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    const user = await userModel.findUser(email);
 
     if (!user || user.password !== password) {
       return res.status(401).json({ message: 'Invalid credentials' });
